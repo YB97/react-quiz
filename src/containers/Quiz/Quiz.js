@@ -1,10 +1,13 @@
 import React from "react"
 import classes from "./Quiz.css"
 import ActiveQuiz from "../../components/ActiveQuiz/ActiveQuiz"
+import FinishedQuiz from "../../components/FinishedQuiz/FinishedQuiz"
 
 class Quiz extends React.Component {
 
     state = {
+        results: {},
+        isFinished: false,
         activeQuestion: 0,
         answerState: null,
         quiz: [
@@ -43,18 +46,26 @@ class Quiz extends React.Component {
         }
 
         const question = this.state.quiz[this.state.activeQuestion]
+        const results = this.state.results
 
         if (question.rightAnswerId === answerId) {
+            if (!results[this.state.activeQuestion+1]) {
+                results[this.state.activeQuestion+1] = 'success'
+            }
 
             this.setState({
                 answerState: {
-                    [answerId]: 'success'
+                    [answerId]: 'success',
+                    results
                 }
             })
+
             const timeout = window.setTimeout(() => {
 
                 if (this.isQuizFinished()) {
-                    console.log('finish')
+                    this.setState({
+                        isFinished: true
+                    })
                 } else {
                     this.setState((prevState) => {
                         return ({
@@ -69,14 +80,26 @@ class Quiz extends React.Component {
 
 
         } else {
+            results[this.state.activeQuestion+1] = 'error'
             this.setState({
                 answerState: {
-                    [answerId]: 'error'
+                    [answerId]: 'error',
+                    results
                 }
             })
         }
 
 
+    }
+
+    onRetryHandler = () => {
+        this.setState({
+            results: {},
+            isFinished: false,
+            activeQuestion: 0,
+            answerState: null
+        })
+        console.log(this.state.isFinished)
     }
 
     isQuizFinished() {
@@ -88,14 +111,23 @@ class Quiz extends React.Component {
             <div className={classes.Quiz}>
                 <div className={classes.QuizWrapper}>
                     <h1>Quiz</h1>
-                    <ActiveQuiz
-                        answers = {this.state.quiz[this.state.activeQuestion].answers}
-                        question = {this.state.quiz[this.state.activeQuestion].question}
-                        onAnswerClick = {this.onAnswerClickHandler}
-                        quizLength = {this.state.quiz.length}
-                        answerNumber = {this.state.activeQuestion+1}
-                        state = {this.state.answerState}
-                    />
+                    {
+                        this.state.isFinished
+                            ? <FinishedQuiz
+                                results = {this.state.results}
+                                quiz = {this.state.quiz}
+                                onRetry = {this.onRetryHandler}
+                                />
+                            : <ActiveQuiz
+                                answers = {this.state.quiz[this.state.activeQuestion].answers}
+                                question = {this.state.quiz[this.state.activeQuestion].question}
+                                onAnswerClick = {this.onAnswerClickHandler}
+                                quizLength = {this.state.quiz.length}
+                                answerNumber = {this.state.activeQuestion+1}
+                                state = {this.state.answerState}
+                            />
+                    }
+
                 </div>
             </div>
         )
